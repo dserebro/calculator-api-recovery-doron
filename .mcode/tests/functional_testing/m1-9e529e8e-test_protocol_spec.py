@@ -9,7 +9,7 @@ This script supports two modes:
 1. SRC Validation: Tests endpoints and captures responses (no expected_response)
 2. DST Contract Validation: Tests endpoints and validates responses match expected (has expected_response)
 
-Generated at: 2026-03-04T03:49:48.591568+00:00
+Generated at: 2026-03-04T03:50:58.345269+00:00
 Project: calculator-api-recovery-doron
 Milestone: 1
 """
@@ -235,11 +235,11 @@ TEST_CASES: list[dict[str, Any]] = resolve_env_placeholders(
             "query": {},
             "body": {
                 "a": 5,
-                "b": true
+                "b": "not_a_number"
             }
         },
         "expected_status": 422,
-        "description": "Send boolean instead of number for b, expect 422 validation error",
+        "description": "Send string instead of number for b, expect 422 validation error",
         "setup": null,
         "cleanup": null
     },
