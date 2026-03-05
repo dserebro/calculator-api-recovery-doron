@@ -1,11 +1,9 @@
 /// Calculator API — Application entrypoint, configuration, and server startup.
-mod core;
-mod db;
-mod models;
-pub mod routes;
-
 use actix_web::{web, App, HttpServer};
 use log::info;
+
+use calculator_api::db;
+use calculator_api::routes;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
