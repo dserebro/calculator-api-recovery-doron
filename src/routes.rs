@@ -1,8 +1,18 @@
 /// HTTP route definitions and handlers for the Calculator API.
-use actix_web::{web, HttpResponse};
+use actix_web::{web, HttpResponse, http::StatusCode};
 
 use crate::core;
-use crate::models::{ApiError, CalculationRequest, HealthResponse, ResultResponse};
+use crate::models::{ApiError, CalculationRequest, ErrorDetail, HealthResponse, ResultResponse};
+
+/// Helper to parse JSON body, returning 422 on deserialization errors (matching FastAPI behavior).
+fn parse_json<T: serde::de::DeserializeOwned>(body: &str) -> Result<T, HttpResponse> {
+    serde_json::from_str(body).map_err(|e| {
+        HttpResponse::build(StatusCode::UNPROCESSABLE_ENTITY)
+            .json(ErrorDetail {
+                detail: format!("Json deserialize error: {}", e),
+            })
+    })
+}
 
 /// Health check handler.
 ///
@@ -15,19 +25,31 @@ pub async fn health_check() -> HttpResponse {
 }
 
 /// Add two numbers.
-pub async fn add(req: web::Json<CalculationRequest>) -> HttpResponse {
+pub async fn add(body: String) -> HttpResponse {
+    let req: CalculationRequest = match parse_json(&body) {
+        Ok(r) => r,
+        Err(resp) => return resp,
+    };
     let result = core::add(req.a, req.b);
     HttpResponse::Ok().json(ResultResponse { result })
 }
 
 /// Subtract b from a.
-pub async fn subtract(req: web::Json<CalculationRequest>) -> HttpResponse {
+pub async fn subtract(body: String) -> HttpResponse {
+    let req: CalculationRequest = match parse_json(&body) {
+        Ok(r) => r,
+        Err(resp) => return resp,
+    };
     let result = core::subtract(req.a, req.b);
     HttpResponse::Ok().json(ResultResponse { result })
 }
 
 /// Multiply two numbers.
-pub async fn multiply(req: web::Json<CalculationRequest>) -> HttpResponse {
+pub async fn multiply(body: String) -> HttpResponse {
+    let req: CalculationRequest = match parse_json(&body) {
+        Ok(r) => r,
+        Err(resp) => return resp,
+    };
     let result = core::multiply(req.a, req.b);
     HttpResponse::Ok().json(ResultResponse { result })
 }
@@ -35,9 +57,11 @@ pub async fn multiply(req: web::Json<CalculationRequest>) -> HttpResponse {
 /// Divide a by b.
 ///
 /// Returns HTTP 400 if b is zero.
-pub async fn divide(
-    req: web::Json<CalculationRequest>,
-) -> Result<HttpResponse, ApiError> {
+pub async fn divide(body: String) -> Result<HttpResponse, ApiError> {
+    let req: CalculationRequest = match parse_json(&body) {
+        Ok(r) => r,
+        Err(resp) => return Ok(resp),
+    };
     match core::divide(req.a, req.b) {
         Ok(result) => Ok(HttpResponse::Ok().json(ResultResponse { result })),
         Err(msg) => Err(ApiError::BadRequest(msg)),
