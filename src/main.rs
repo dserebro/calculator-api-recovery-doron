@@ -21,11 +21,11 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(|| {
         let json_cfg = web::JsonConfig::default().error_handler(|err, _req| {
-            let msg = err.to_string();
             let detail = vec![ValidationErrorItem {
-                error_type: "value_error".to_string(),
+                error_type: "json_invalid".to_string(),
                 loc: vec![serde_json::Value::String("body".to_string())],
-                msg,
+                msg: err.to_string(),
+                input: serde_json::Value::Null,
             }];
             let response =
                 HttpResponse::UnprocessableEntity().json(ValidationErrorResponse { detail });
