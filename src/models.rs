@@ -21,3 +21,16 @@ pub struct HealthResponse {
 pub struct ErrorResponse {
     pub detail: String,
 }
+
+#[derive(Serialize)]
+pub struct ValidationErrorItem {
+    #[serde(rename = "type")]
+    pub error_type: String,
+    pub loc: Vec<serde_json::Value>,
+    pub msg: String,
+}
+
+#[derive(Serialize)]
+pub struct ValidationErrorResponse {
+    pub detail: Vec<ValidationErrorItem>,
+}

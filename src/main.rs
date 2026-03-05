@@ -5,7 +5,7 @@ mod routes;
 use actix_web::{web, App, HttpResponse, HttpServer};
 use log::info;
 
-use crate::models::ErrorResponse;
+use crate::models::{ValidationErrorItem, ValidationErrorResponse};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -21,9 +21,14 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(|| {
         let json_cfg = web::JsonConfig::default().error_handler(|err, _req| {
-            let response = HttpResponse::UnprocessableEntity().json(ErrorResponse {
-                detail: err.to_string(),
-            });
+            let msg = err.to_string();
+            let detail = vec![ValidationErrorItem {
+                error_type: "value_error".to_string(),
+                loc: vec![serde_json::Value::String("body".to_string())],
+                msg,
+            }];
+            let response =
+                HttpResponse::UnprocessableEntity().json(ValidationErrorResponse { detail });
             actix_web::error::InternalError::from_response(err, response).into()
         });
 
