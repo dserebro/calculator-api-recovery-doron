@@ -4,43 +4,75 @@ use actix_web::{web, HttpResponse, http::StatusCode};
 use crate::core;
 use crate::models::{ApiError, CalculationRequest, HealthResponse, ResultResponse, ValidationErrorDetail, ValidationErrorItem};
 
+/// Required fields for CalculationRequest.
+const REQUIRED_FIELDS: &[&str] = &["a", "b"];
+
 /// Build a FastAPI/Pydantic-compatible validation error response (422) from a serde_json error.
 fn build_validation_error(e: &serde_json::Error, body: &str) -> HttpResponse {
     let err_msg = format!("{}", e);
     let input_value: serde_json::Value = serde_json::from_str(body).unwrap_or(serde_json::Value::Null);
 
-    // Determine error type and extract field name from serde error message
-    let (error_type, field_name, msg, input) = if let Some(rest) = err_msg.strip_prefix("missing field `") {
-        // e.g. "missing field `b` at line 1 column 10"
-        let field = rest.split('`').next().unwrap_or("unknown");
-        ("missing".to_string(), field.to_string(), "Field required".to_string(), input_value)
+    let items = if err_msg.contains("missing field") {
+        // Check ALL required fields, not just the first one serde reports
+        let mut missing_items = Vec::new();
+        if let Some(obj) = input_value.as_object() {
+            for &field in REQUIRED_FIELDS {
+                if !obj.contains_key(field) {
+                    missing_items.push(ValidationErrorItem {
+                        error_type: "missing".to_string(),
+                        loc: vec![
+                            serde_json::Value::String("body".to_string()),
+                            serde_json::Value::String(field.to_string()),
+                        ],
+                        msg: "Field required".to_string(),
+                        input: input_value.clone(),
+                    });
+                }
+            }
+        }
+        if missing_items.is_empty() {
+            // Fallback: extract field from error message
+            let field = err_msg.strip_prefix("missing field `")
+                .and_then(|r| r.split('`').next())
+                .unwrap_or("unknown");
+            vec![ValidationErrorItem {
+                error_type: "missing".to_string(),
+                loc: vec![
+                    serde_json::Value::String("body".to_string()),
+                    serde_json::Value::String(field.to_string()),
+                ],
+                msg: "Field required".to_string(),
+                input: input_value,
+            }]
+        } else {
+            missing_items
+        }
     } else if err_msg.contains("invalid type:") {
-        // e.g. "invalid type: string \"not_a_number\", expected f64 at line 1 column 20"
-        // Extract field name from the input by checking which field has wrong type
         let field = guess_invalid_field(&input_value);
         let field_input = input_value.get(&field).cloned().unwrap_or(serde_json::Value::Null);
-        (
-            "float_parsing".to_string(),
-            field,
-            "Input should be a valid number, unable to parse string as a number".to_string(),
-            field_input,
-        )
+        vec![ValidationErrorItem {
+            error_type: "float_parsing".to_string(),
+            loc: vec![
+                serde_json::Value::String("body".to_string()),
+                serde_json::Value::String(field),
+            ],
+            msg: "Input should be a valid number, unable to parse string as a number".to_string(),
+            input: field_input,
+        }]
     } else {
-        ("value_error".to_string(), "unknown".to_string(), err_msg, input_value)
-    };
-
-    let item = ValidationErrorItem {
-        error_type,
-        loc: vec![
-            serde_json::Value::String("body".to_string()),
-            serde_json::Value::String(field_name),
-        ],
-        msg,
-        input,
+        vec![ValidationErrorItem {
+            error_type: "value_error".to_string(),
+            loc: vec![
+                serde_json::Value::String("body".to_string()),
+                serde_json::Value::String("unknown".to_string()),
+            ],
+            msg: err_msg,
+            input: input_value,
+        }]
     };
 
     HttpResponse::build(StatusCode::UNPROCESSABLE_ENTITY)
-        .json(ValidationErrorDetail { detail: vec![item] })
+        .json(ValidationErrorDetail { detail: items })
 }
 
 /// Try to guess which field has an invalid type by checking non-numeric string values.
