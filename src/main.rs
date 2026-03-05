@@ -2,8 +2,10 @@ mod core;
 mod models;
 mod routes;
 
-use actix_web::{App, HttpServer};
+use actix_web::{web, App, HttpResponse, HttpServer};
 use log::info;
+
+use crate::models::ErrorResponse;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -17,8 +19,19 @@ async fn main() -> std::io::Result<()> {
 
     info!("Starting server on {}:{}", host, port);
 
-    HttpServer::new(|| App::new().configure(routes::configure))
-        .bind((host.as_str(), port))?
-        .run()
-        .await
+    HttpServer::new(|| {
+        let json_cfg = web::JsonConfig::default().error_handler(|err, _req| {
+            let response = HttpResponse::UnprocessableEntity().json(ErrorResponse {
+                detail: err.to_string(),
+            });
+            actix_web::error::InternalError::from_response(err, response).into()
+        });
+
+        App::new()
+            .app_data(json_cfg)
+            .configure(routes::configure)
+    })
+    .bind((host.as_str(), port))?
+    .run()
+    .await
 }
