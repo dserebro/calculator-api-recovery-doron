@@ -4,6 +4,7 @@ use log::info;
 
 use calculator_api::db;
 use calculator_api::routes;
+use calculator_api::json_error_config;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -37,6 +38,7 @@ async fn main() -> std::io::Result<()> {
     // Start HTTP server
     HttpServer::new(move || {
         App::new()
+            .app_data(json_error_config())
             .app_data(web::Data::new(pool.clone()))
             .configure(routes::configure)
     })
