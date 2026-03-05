@@ -65,6 +65,13 @@ out/
 target/
 **/*.rs.bk
 *.pdb
+Cargo.lock
+
+# ----- SQLite -----
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
 
 # ----- Java / Kotlin / Scala / Gradle / Maven -----
 *.class
