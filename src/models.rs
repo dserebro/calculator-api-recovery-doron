@@ -35,6 +35,22 @@ pub struct ErrorDetail {
     pub detail: String,
 }
 
+/// A single validation error item matching FastAPI/Pydantic format.
+#[derive(Debug, Serialize)]
+pub struct ValidationErrorItem {
+    #[serde(rename = "type")]
+    pub error_type: String,
+    pub loc: Vec<serde_json::Value>,
+    pub msg: String,
+    pub input: serde_json::Value,
+}
+
+/// Validation error response matching FastAPI's 422 format: {"detail": [...]}.
+#[derive(Debug, Serialize)]
+pub struct ValidationErrorDetail {
+    pub detail: Vec<ValidationErrorItem>,
+}
+
 /// Application error type that maps to HTTP responses with FastAPI-compatible error format.
 #[derive(Debug)]
 pub enum ApiError {
