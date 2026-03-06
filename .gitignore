@@ -66,6 +66,12 @@ target/
 **/*.rs.bk
 *.pdb
 
+# ----- SQLite -----
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
 # ----- Java / Kotlin / Scala / Gradle / Maven -----
 *.class
 *.jar
