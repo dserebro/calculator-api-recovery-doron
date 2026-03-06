@@ -2,10 +2,7 @@
 //!
 //! A simple calculator REST API server, translated from Python/FastAPI to Rust/Axum.
 
-mod core;
-mod db;
-mod models;
-mod routes;
+use calculator_api::{db, routes};
 
 use std::env;
 use std::net::SocketAddr;
