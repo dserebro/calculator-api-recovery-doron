@@ -2,11 +2,7 @@
 //!
 //! A Rust translation of the Python FastAPI calculator service.
 
-mod core;
-mod db;
-mod models;
-mod routes;
-
+use calculator_api::{db, routes};
 use std::env;
 use tokio::net::TcpListener;
 
