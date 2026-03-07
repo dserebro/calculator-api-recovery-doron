@@ -8,7 +8,7 @@ use axum::{
 use crate::core;
 use crate::db::DbPool;
 use crate::models::{
-    AppError, CalculationRequest, HealthResponse, ResultResponse,
+    AppError, CalculationRequest, HealthResponse, ResultResponse, ValidatedJson,
 };
 
 /// Application state shared across all handlers.
@@ -42,7 +42,7 @@ async fn health_handler() -> Json<HealthResponse> {
 
 /// POST /add — Add two numbers.
 async fn add_handler(
-    Json(payload): Json<CalculationRequest>,
+    ValidatedJson(payload): ValidatedJson<CalculationRequest>,
 ) -> Json<ResultResponse> {
     Json(ResultResponse {
         result: core::add(payload.a, payload.b),
@@ -51,7 +51,7 @@ async fn add_handler(
 
 /// POST /subtract — Subtract b from a.
 async fn subtract_handler(
-    Json(payload): Json<CalculationRequest>,
+    ValidatedJson(payload): ValidatedJson<CalculationRequest>,
 ) -> Json<ResultResponse> {
     Json(ResultResponse {
         result: core::subtract(payload.a, payload.b),
@@ -60,7 +60,7 @@ async fn subtract_handler(
 
 /// POST /multiply — Multiply two numbers.
 async fn multiply_handler(
-    Json(payload): Json<CalculationRequest>,
+    ValidatedJson(payload): ValidatedJson<CalculationRequest>,
 ) -> Json<ResultResponse> {
     Json(ResultResponse {
         result: core::multiply(payload.a, payload.b),
@@ -71,7 +71,7 @@ async fn multiply_handler(
 ///
 /// Returns HTTP 400 if b is zero, matching the Python app's error behavior.
 async fn divide_handler(
-    Json(payload): Json<CalculationRequest>,
+    ValidatedJson(payload): ValidatedJson<CalculationRequest>,
 ) -> Result<Json<ResultResponse>, AppError> {
     match core::divide(payload.a, payload.b) {
         Ok(result) => Ok(Json(ResultResponse { result })),
