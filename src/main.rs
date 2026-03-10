@@ -3,10 +3,8 @@
 //! A REST API server providing arithmetic operations and calculation history,
 //! translated from the Python FastAPI implementation.
 
-mod core;
-mod db;
-mod models;
-mod routes;
+use calculator_api::db;
+use calculator_api::routes;
 
 use std::env;
 use tokio::net::TcpListener;
