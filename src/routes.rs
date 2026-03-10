@@ -9,7 +9,7 @@ use axum::{Json, Router};
 
 use crate::core;
 use crate::db::DbPool;
-use crate::models::{ApiError, HealthResponse, Operands, ResultResponse};
+use crate::models::{ApiError, HealthResponse, Operands, ResultResponse, ValidatedJson};
 
 /// Build the Axum router with all routes and shared state.
 pub fn create_router(pool: DbPool) -> Router {
@@ -35,7 +35,7 @@ async fn health_handler() -> impl IntoResponse {
 
 /// POST /add - Add two numbers.
 async fn add_handler(
-    Json(payload): Json<Operands>,
+    ValidatedJson(payload): ValidatedJson<Operands>,
 ) -> impl IntoResponse {
     let result = core::add(payload.a, payload.b);
     (StatusCode::OK, Json(ResultResponse { result }))
@@ -43,7 +43,7 @@ async fn add_handler(
 
 /// POST /subtract - Subtract b from a.
 async fn subtract_handler(
-    Json(payload): Json<Operands>,
+    ValidatedJson(payload): ValidatedJson<Operands>,
 ) -> impl IntoResponse {
     let result = core::subtract(payload.a, payload.b);
     (StatusCode::OK, Json(ResultResponse { result }))
@@ -51,7 +51,7 @@ async fn subtract_handler(
 
 /// POST /multiply - Multiply two numbers.
 async fn multiply_handler(
-    Json(payload): Json<Operands>,
+    ValidatedJson(payload): ValidatedJson<Operands>,
 ) -> impl IntoResponse {
     let result = core::multiply(payload.a, payload.b);
     (StatusCode::OK, Json(ResultResponse { result }))
@@ -61,7 +61,7 @@ async fn multiply_handler(
 ///
 /// Returns 400 Bad Request if b is zero.
 async fn divide_handler(
-    Json(payload): Json<Operands>,
+    ValidatedJson(payload): ValidatedJson<Operands>,
 ) -> Result<impl IntoResponse, ApiError> {
     match core::divide(payload.a, payload.b) {
         Ok(result) => Ok((StatusCode::OK, Json(ResultResponse { result }))),
